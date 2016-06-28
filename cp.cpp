@@ -35,7 +35,7 @@ int main( int argc, char **argv )
 			setOption( argv[i] );
 		} else if ( srcArgNo == 0 ) {		// srcArgNo hasn't changed
 			srcArgNo = i;
-		} else if ( destArgNo.size() == 0 ) {	// srcArgNo has been set,but not destArNo
+		} else {	// not an option and not source, must be destination
 			destArgNo.push_back(i);
 		}
 	}

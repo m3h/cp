@@ -11,10 +11,12 @@ int srcArgNo = 0;
 vector<int> destArgNo;
 
 bool optAttributesOnly = false;
+bool optInteractive = false;
 
 ifstream inputFile;
 ofstream outputFile;
 
+bool is_file_exist( const char *filename );
 void setOption( char *option );
 void setPermissions( const char *inputFileName, const char *outputFileName);
 void closeFiles();
@@ -59,6 +61,21 @@ int main( int argc, char **argv )
 			exit(EXIT_FAILURE);
 		}
 
+		if( optInteractive == true ) {
+			if( is_file_exist( argv[destArgNo[i] ]) ) {
+					cout << "Do you want to overwrite " << argv[destArgNo[i]] << "? (y/n)" << endl;
+
+					char overwrite;
+					cin >> overwrite;
+
+					overwrite = tolower( overwrite );
+
+					if( overwrite == 'n' ) {
+						continue;
+					}
+			}
+		}
+
 		copy();
 		outputFile.close();
 		setPermissions( argv[srcArgNo], argv[destArgNo[i]] );
@@ -70,11 +87,23 @@ int main( int argc, char **argv )
 	exit(EXIT_SUCCESS);
 }
 
+bool is_file_exist( const char *fileName )
+{
+	ifstream infile( fileName );
+	bool exists = infile.good();
+	infile.close();
+
+	return exists;
+}
+
 void setOption( char *option )
 {
 	if( strcmp( option, "--attributes-only" ) == 0 ) {
 
 		optAttributesOnly = true;
+	} else if( ( strcmp( option, "-i" ) == 0 ) || ( strcmp( option, "--interactive" ) ) ) {
+
+		optInteractive = true;
 	}
 
 

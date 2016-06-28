@@ -2,27 +2,45 @@
 #include <fstream>
 #include <cstdlib>
 #include <sys/stat.h>
+#include <vector>
+#include <cstring>
 
 using namespace std;
+
+int srcArgNo = 0;
+vector<int> destArgNo;
+
+bool optAttributesOnly = false;
 
 ifstream inputFile;
 ofstream outputFile;
 
+void setOption( char *option );
 void setPermissions( const char *inputFileName, const char *outputFileName);
 void closeFiles();
 void copy();
 
 int main( int argc, char **argv )
 {
-	if( argc < 3 ) {	// less than two operands
-		
+	if( argc < 3 ) {	// less than two arguments - must fail
+
 		cout << argv[0] << ": invalid options." << endl;
 		cout << "Try \'" << argv[0] << " SOURCE DESTINATION..." << endl;
 
 		exit(EXIT_FAILURE);
 	}
 
-	inputFile.open( argv[1], ios::in|ios::binary );
+	for( int i = 1; i < argc; i++ ) { 	// scan through arguments looking for options
+		if( argv[i][0] == '-' ) {
+			setOption( argv[i] );
+		} else if ( srcArgNo == 0 ) {		// srcArgNo hasn't changed
+			srcArgNo = i;
+		} else if ( destArgNo.size() == 0 ) {	// srcArgNo has been set,but not destArNo
+			destArgNo.push_back(i);
+		}
+	}
+
+	inputFile.open( argv[srcArgNo], ios::binary );
 	if( !inputFile ) {
 		cout << "Error opening \'" << argv[1] << "\'. Does it exist?" << endl;
 		closeFiles();
@@ -31,11 +49,11 @@ int main( int argc, char **argv )
 	}
 
 	// copy to each destination
-	for( int i = 2; i < argc; i++ )
+	for( int i = 0; i < destArgNo.size(); i++ )
 	{
-		outputFile.open( argv[i], ios::out|ios::binary );
+		outputFile.open( argv[destArgNo[i]], ios::binary );
 		if( !outputFile ) {
-			cout << "Error opening \'" << argv[2] << "\'." << endl;
+			cout << "Error opening \'" << argv[destArgNo[i]] << "\'." << endl;
 			closeFiles();
 
 			exit(EXIT_FAILURE);
@@ -43,7 +61,7 @@ int main( int argc, char **argv )
 
 		copy();
 		outputFile.close();
-		setPermissions( argv[1], argv[i] );
+		setPermissions( argv[srcArgNo], argv[destArgNo[i]] );
 	}
 
 	
@@ -52,15 +70,28 @@ int main( int argc, char **argv )
 	exit(EXIT_SUCCESS);
 }
 
+void setOption( char *option )
+{
+	if( strcmp( option, "--attributes-only" ) == 0 ) {
+
+		optAttributesOnly = true;
+	}
+
+
+	return;
+}
+
 void copy()
 {
 
-	char c;
+	if( optAttributesOnly == false )
+	{
+		char c;
 
-	while( inputFile.get( c ) ) {
-		outputFile.put( c );
-
-	};
+		while( inputFile.get( c ) ) {
+			outputFile.put( c );
+		}
+	}
 
 }
 
